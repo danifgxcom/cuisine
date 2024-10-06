@@ -1,0 +1,25 @@
+# Ignorar el directorio build (Java, Kotlin, etc.)
+build/
+
+# Ignorar archivos específicos de Gradle
+.gradle/
+build/
+
+# Ignorar archivos de configuración del IDE (IntelliJ, VSCode, etc.)
+.idea/
+.vscode/
+*.iml
+
+# Ignorar archivos y directorios generados por sistema
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Ignorar binarios y compilados de Java
+out/
+bin/
+*.class
+
+# Ignorar archivos de dependencias y librerías locales
+libs/
