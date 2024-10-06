@@ -17,5 +17,6 @@ data class Recipe(
 
 data class Ingredient(
     val rawMaterialId: UUID,
-    val amount: Double
+    val amount: Double,
+    val unit: String?,
 )

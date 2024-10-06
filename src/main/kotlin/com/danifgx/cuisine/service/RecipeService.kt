@@ -1,25 +1,30 @@
 package com.danifgx.cuisine.service
 
+import com.danifgx.cuisine.log.logger
+import com.danifgx.cuisine.model.Ingredient
+import com.danifgx.cuisine.model.Recipe
 import com.danifgx.cuisine.repository.RecipeRepository
-import lombok.extern.log4j.Log4j2
-import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
-import org.springframework.data.mongodb.core.aggregation.Aggregation.group
-import org.springframework.data.mongodb.core.aggregation.Aggregation.lookup
-import org.springframework.data.mongodb.core.aggregation.Aggregation.unwind
+import org.springframework.data.mongodb.core.aggregation.Aggregation.*
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.ResponseStatus
+import java.util.UUID
 
 @Service
 class RecipeService(
     private val repository: RecipeRepository,
-    private val mongoTemplate: MongoTemplate
+    private val mongoTemplate: MongoTemplate,
 ) {
-    private val logger = LoggerFactory.getLogger(RecipeService::class.java)
+
+    private val logger = logger()
 
     fun getAllRecipes() = repository.findAll()
 
     fun getAllRecipesWithEnrichedIngredients(): List<Map<String, Any>> {
+
+        logger.info("getAllRecipesWithEnrichedIngredients")
         val unwindIngredients = unwind("ingredients")
 
         val lookupOperation = lookup(
@@ -54,8 +59,50 @@ class RecipeService(
 
         val results = mongoTemplate.aggregate(aggregation, "recipes", Map::class.java)
 
+        val safeList = results.mappedResults.filterIsInstance<Map<String, Any>>()
 
+        logger.info("Found ${safeList.size} results")
 
-        return results.mappedResults as List<Map<String, Any>>
+        return safeList
+    }
+
+    fun getRecipeById(id: UUID): Recipe {
+        return repository.findById(id).orElseThrow {
+            throw RecipeNotFoundException("Recipe with ID $id not found")
+        }
+    }
+
+    fun createRecipe(recipe: Recipe): Recipe {
+        return repository.save(recipe)
+    }
+
+    fun updateRecipe(id: UUID, updatedRecipe: Recipe): Recipe {
+        if (!repository.existsById(id)) {
+            throw RecipeNotFoundException("Recipe with ID $id not found")
+        }
+        return repository.save(updatedRecipe)
+    }
+
+    fun deleteRecipe(id: UUID) {
+        if (!repository.existsById(id)) {
+            throw RecipeNotFoundException("Recipe with ID $id not found")
+        }
+        repository.deleteById(id)
+    }
+
+    fun calculateIngredients(recipeId: UUID, targetDiners: Int): List<Ingredient> {
+        val recipe = getRecipeById(recipeId)
+        return calculateIngredientsForServings(recipe, targetDiners)
+    }
+
+    fun calculateIngredientsForServings(recipe: Recipe, targetDiners: Int): List<Ingredient> {
+        val factor = targetDiners.toDouble() / recipe.diners
+        return recipe.ingredients.map { ingredient ->
+            ingredient.copy(amount = ingredient.amount * factor)
+        }
     }
 }
+
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+class RecipeNotFoundException(message: String) : RuntimeException(message)
