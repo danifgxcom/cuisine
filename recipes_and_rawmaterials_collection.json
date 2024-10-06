@@ -1,0 +1,258 @@
+
+{
+  "info": {
+    "_postman_id": "d29f3c9f-7fda-4727-9bde-8a5c7d362f63",
+    "name": "Recipes and RawMaterials API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List All Recipes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/recipes",
+          "host": ["http://localhost:8080"],
+          "path": ["recipes"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Recipe By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/recipes/:id",
+          "host": ["http://localhost:8080"],
+          "path": ["recipes", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "<recipe-id>"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Calculate Ingredients for Recipe",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/recipes/:id/calculate?targetDiners={{targetDiners}}",
+          "host": ["http://localhost:8080"],
+          "path": ["recipes", ":id", "calculate"],
+          "query": [
+            {
+              "key": "targetDiners",
+              "value": "5",
+              "description": "Number of diners to calculate ingredients for"
+            }
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "<recipe-id>"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Recipe",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"Pasta\",\n  \"description\": \"Delicious pasta recipe\",\n  \"ingredients\": [\n    {\n      \"rawMaterialId\": \"<raw-material-id>\",\n      \"amount\": 200,\n      \"unit\": \"grams\"\n    }\n  ],\n  \"diners\": 4,\n  \"totalKCals\": 800,\n  \"author\": \"Chef John\",\n  \"url\": \"http://example.com/pasta\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/recipes",
+          "host": ["http://localhost:8080"],
+          "path": ["recipes"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Recipe",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Pasta\",\n  \"description\": \"Updated delicious pasta recipe\",\n  \"ingredients\": [\n    {\n      \"rawMaterialId\": \"<raw-material-id>\",\n      \"amount\": 300,\n      \"unit\": \"grams\"\n    }\n  ],\n  \"diners\": 4,\n  \"totalKCals\": 900,\n  \"author\": \"Chef John\",\n  \"url\": \"http://example.com/updated-pasta\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/recipes/:id",
+          "host": ["http://localhost:8080"],
+          "path": ["recipes", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "<recipe-id>"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Recipe",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/recipes/:id",
+          "host": ["http://localhost:8080"],
+          "path": ["recipes", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "<recipe-id>"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List All Raw Materials",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/materials",
+          "host": ["http://localhost:8080"],
+          "path": ["materials"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Raw Material By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/materials/:id",
+          "host": ["http://localhost:8080"],
+          "path": ["materials", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "<raw-material-id>"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Raw Materials with Description in Language",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/materials/with-description?language={{language}}",
+          "host": ["http://localhost:8080"],
+          "path": ["materials", "with-description"],
+          "query": [
+            {
+              "key": "language",
+              "value": "en",
+              "description": "Language for the description"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Raw Material",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"<uuid>\",\n  \"type\": \"vegetable\",\n  \"nutritionalGroup\": \"A\",\n  \"kcalPer100Gr\": 50,\n  \"unit\": \"grams\",\n  \"translations\": [\n    {\n      \"language\": \"en\",\n      \"name\": \"Carrot\",\n      \"description\": \"Orange root vegetable\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/materials",
+          "host": ["http://localhost:8080"],
+          "path": ["materials"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Raw Material",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"fruit\",\n  \"nutritionalGroup\": \"B\",\n  \"kcalPer100Gr\": 60,\n  \"unit\": \"grams\",\n  \"translations\": [\n    {\n      \"language\": \"es\",\n      \"name\": \"Zanahoria\",\n      \"description\": \"Raiz vegetal naranja\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/materials/:id",
+          "host": ["http://localhost:8080"],
+          "path": ["materials", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "<raw-material-id>"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Raw Material",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/materials/:id",
+          "host": ["http://localhost:8080"],
+          "path": ["materials", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "<raw-material-id>"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
