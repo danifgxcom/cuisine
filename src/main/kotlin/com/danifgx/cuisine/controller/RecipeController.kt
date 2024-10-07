@@ -45,9 +45,19 @@ class RecipeController(private val recipeService: RecipeService) {
     }
 
     @GetMapping("/{id}/calculate")
-    fun calculateIngredients(@PathVariable id: UUID, @RequestParam targetDiners: Int): ResponseEntity<List<Ingredient>> {
+    fun calculateIngredients(
+        @PathVariable id: UUID,
+        @RequestParam targetDiners: Int
+    ): ResponseEntity<List<Ingredient>> {
         require(targetDiners > 0) { "Target diners must be greater than 0" }
         val ingredients = recipeService.calculateIngredients(id, targetDiners)
         return ResponseEntity.ok(ingredients)
+    }
+
+    @GetMapping("/search")
+    fun searchRecipesByIngredients(@RequestParam ingredients: String): ResponseEntity<List<Recipe>> {
+        val ingredientNames = ingredients.split(",").map { it.trim() }
+        val recipes = recipeService.findRecipesByIngredients(ingredientNames)
+        return ResponseEntity.ok(recipes)
     }
 }

@@ -1,5 +1,6 @@
 package com.danifgx.cuisine.service
 
+import com.danifgx.cuisine.log.logger
 import com.danifgx.cuisine.model.RawMaterial
 import com.danifgx.cuisine.repository.RawMaterialRepository
 import org.springframework.http.HttpStatus
@@ -9,6 +10,8 @@ import java.util.*
 
 @Service
 class RawMaterialService(private val rawMaterialRepository: RawMaterialRepository) {
+
+    private val logger = logger()
 
     fun getAllRawMaterials(): List<RawMaterial> {
         return rawMaterialRepository.findAll()
@@ -47,6 +50,23 @@ class RawMaterialService(private val rawMaterialRepository: RawMaterialRepositor
     fun deleteRawMaterial(id: UUID): Boolean {
         rawMaterialRepository.findById(id).ifPresent { rawMaterialRepository.delete(it) }
         return rawMaterialRepository.existsById(id).not()
+    }
+
+    fun findRawMaterialIdsByNames(names: List<String>): List<UUID> {
+        val normalizedNames = names.map { it.lowercase(Locale.getDefault()) }
+
+        val result = rawMaterialRepository.findAll().filter { rawMaterial ->
+            rawMaterial.translations.any { translation ->
+                val translationNameLowercase = translation.name.lowercase(Locale.getDefault())
+                normalizedNames.any { name ->
+                    val match = translationNameLowercase.contains(name)
+                    logger.info("Checking translation name: $translationNameLowercase against names: $normalizedNames")
+                    match
+                }
+            }
+        }.map { it.id }
+
+        return result
     }
 }
 

@@ -3,6 +3,7 @@ package com.danifgx.cuisine.service
 import com.danifgx.cuisine.log.logger
 import com.danifgx.cuisine.model.Ingredient
 import com.danifgx.cuisine.model.Recipe
+import com.danifgx.cuisine.repository.RawMaterialRepository
 import com.danifgx.cuisine.repository.RecipeRepository
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
@@ -14,13 +15,15 @@ import java.util.UUID
 
 @Service
 class RecipeService(
-    private val repository: RecipeRepository,
+    private val recipeRepository: RecipeRepository,
+    private val rawMaterialRepository: RawMaterialRepository,
+    private val rawMaterialService: RawMaterialService,
     private val mongoTemplate: MongoTemplate,
 ) {
 
     private val logger = logger()
 
-    fun getAllRecipes() = repository.findAll()
+    fun getAllRecipes() = recipeRepository.findAll()
 
     fun getAllRecipesWithEnrichedIngredients(): List<Map<String, Any>> {
 
@@ -67,27 +70,27 @@ class RecipeService(
     }
 
     fun getRecipeById(id: UUID): Recipe {
-        return repository.findById(id).orElseThrow {
+        return recipeRepository.findById(id).orElseThrow {
             throw RecipeNotFoundException("Recipe with ID $id not found")
         }
     }
 
     fun createRecipe(recipe: Recipe): Recipe {
-        return repository.save(recipe)
+        return recipeRepository.save(recipe)
     }
 
     fun updateRecipe(id: UUID, updatedRecipe: Recipe): Recipe {
-        if (!repository.existsById(id)) {
+        if (!recipeRepository.existsById(id)) {
             throw RecipeNotFoundException("Recipe with ID $id not found")
         }
-        return repository.save(updatedRecipe)
+        return recipeRepository.save(updatedRecipe)
     }
 
     fun deleteRecipe(id: UUID) {
-        if (!repository.existsById(id)) {
+        if (!recipeRepository.existsById(id)) {
             throw RecipeNotFoundException("Recipe with ID $id not found")
         }
-        repository.deleteById(id)
+        recipeRepository.deleteById(id)
     }
 
     fun calculateIngredients(recipeId: UUID, targetDiners: Int): List<Ingredient> {
@@ -99,6 +102,27 @@ class RecipeService(
         val factor = targetDiners.toDouble() / recipe.diners
         return recipe.ingredients.map { ingredient ->
             ingredient.copy(amount = ingredient.amount * factor)
+        }
+    }
+
+    fun findRecipesByIngredients(ingredientNames: List<String>): List<Recipe> {
+        val rawMaterialIds = rawMaterialService.findRawMaterialIdsByNames(ingredientNames)
+
+        if (rawMaterialIds.isEmpty()) {
+            logger.info("No matching raw materials found for the provided ingredient names: $ingredientNames")
+            return emptyList()
+        }
+
+        val rawMaterialIdsSet = rawMaterialIds.toSet()
+
+        logger.info("Raw Material IDs to match: $rawMaterialIdsSet")
+
+        return recipeRepository.findAll().filter { recipe ->
+            val recipeIngredientIds = recipe.ingredients.map { it.rawMaterialId }.toSet()
+
+            val containsAny = rawMaterialIdsSet.any { it in recipeIngredientIds }
+
+            containsAny
         }
     }
 }
