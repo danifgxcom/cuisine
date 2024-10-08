@@ -16,7 +16,6 @@ import java.util.UUID
 @Service
 class RecipeService(
     private val recipeRepository: RecipeRepository,
-    private val rawMaterialRepository: RawMaterialRepository,
     private val rawMaterialService: RawMaterialService,
     private val mongoTemplate: MongoTemplate,
 ) {
