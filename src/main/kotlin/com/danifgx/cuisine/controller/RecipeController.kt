@@ -55,9 +55,9 @@ class RecipeController(private val recipeService: RecipeService) {
     }
 
     @GetMapping("/search")
-    fun searchRecipesByIngredients(@RequestParam ingredients: String): ResponseEntity<List<Recipe>> {
+    fun searchRecipesByIngredients(@RequestParam ingredients: String): ResponseEntity<List<Map<String, Any>>> {
         val ingredientNames = ingredients.split(",").map { it.trim() }
-        val recipes = recipeService.findRecipesByIngredients(ingredientNames)
-        return ResponseEntity.ok(recipes)
+        val enrichedRecipes = recipeService.findRecipesWithEnrichedIngredients(ingredientNames)
+        return ResponseEntity.ok(enrichedRecipes)
     }
 }

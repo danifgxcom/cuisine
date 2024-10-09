@@ -5,9 +5,12 @@ import com.danifgx.cuisine.model.Ingredient
 import com.danifgx.cuisine.model.Recipe
 import com.danifgx.cuisine.repository.RawMaterialRepository
 import com.danifgx.cuisine.repository.RecipeRepository
+import com.mongodb.client.model.Filters.where
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.aggregation.Aggregation.*
+import org.springframework.data.mongodb.core.aggregation.LookupOperation
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -124,6 +127,73 @@ class RecipeService(
             containsAny
         }
     }
+
+    fun findRecipesWithEnrichedIngredients(ingredientNames: List<String>): List<Map<String, Any>> {
+        logger.info("Finding recipes that contain any of the provided ingredient names: $ingredientNames")
+
+        // Find the corresponding rawMaterial IDs for the given ingredient names
+        val rawMaterialIds = rawMaterialService.findRawMaterialIdsByNames(ingredientNames)
+        if (rawMaterialIds.isEmpty()) {
+            logger.info("No matching raw materials found for the provided ingredient names: $ingredientNames")
+            return emptyList()
+        }
+
+        val rawMaterialIdsSet = rawMaterialIds.toSet()
+        logger.info("Matching raw material IDs: $rawMaterialIdsSet")
+
+        // Aggregation stages
+
+        // Unwind the ingredients in the recipes to work with individual ingredients
+        val unwindIngredients = unwind("ingredients")
+
+        // Match recipes that have at least one of the provided raw material IDs
+        val matchIngredients = match(Criteria.where("ingredients.rawMaterialId").`in`(rawMaterialIdsSet))
+
+        // Lookup rawMaterials to enrich the ingredient details
+        val lookupOperation: LookupOperation = lookup(
+            "rawMaterials",            // Foreign collection
+            "ingredients.rawMaterialId", // Local field in the recipe
+            "_id",                      // Foreign field in the raw material
+            "rawMaterial"               // Field name in the output that will contain the lookup result
+        )
+
+        // Unwind the rawMaterial field to work directly with its fields (set preserveNullAndEmptyArrays to true)
+        val unwindRawMaterial = unwind("rawMaterial", true)
+
+        // Group back by recipe ID and aggregate all needed fields
+        val groupByRecipe = group("_id")
+            .first("name").`as`("name")
+            .first("description").`as`("description")
+            .first("diners").`as`("diners")
+            .first("totalKCals").`as`("totalKCals")
+            .first("author").`as`("author")
+            .first("url").`as`("url")
+            .push(
+                mapOf(
+                    "amount" to "\$ingredients.amount",
+                    "rawMaterial" to "\$rawMaterial"
+                )
+            ).`as`("ingredients")
+
+        // Create the aggregation pipeline
+        val aggregation = Aggregation.newAggregation(
+            unwindIngredients,
+            matchIngredients,    // Filter to include only recipes that match the rawMaterial IDs
+            lookupOperation,     // Lookup rawMaterials collection for enrichment
+            unwindRawMaterial,   // Unwind the raw material field for easy access
+            groupByRecipe        // Group by recipe to aggregate enriched ingredients
+        )
+
+        // Execute the aggregation
+        val results = mongoTemplate.aggregate(aggregation, "recipes", Map::class.java)
+
+        val enrichedRecipes = results.mappedResults.filterIsInstance<Map<String, Any>>()
+
+        logger.info("Found ${enrichedRecipes.size} enriched recipes")
+
+        return enrichedRecipes
+    }
+
 }
 
 
