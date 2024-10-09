@@ -1,9 +1,6 @@
 package com.danifgx.cuisine.model.mapper
 
-import com.danifgx.cuisine.model.RawMaterial
-import com.danifgx.cuisine.model.RawMaterialDTO
-import com.danifgx.cuisine.model.Translation
-import com.danifgx.cuisine.model.TranslationDTO
+import com.danifgx.cuisine.model.*
 import org.mapstruct.Mapper
 import org.mapstruct.factory.Mappers
 
@@ -29,4 +26,28 @@ interface TranslationMapper {
     fun toDTO(translation: Translation): TranslationDTO
 
     fun toEntity(translationDTO: TranslationDTO): Translation
+}
+
+@Mapper(componentModel = "spring")
+interface RecipeMapper {
+
+    companion object {
+        val INSTANCE: RecipeMapper = Mappers.getMapper(RecipeMapper::class.java)
+    }
+
+    fun toDTO(recipe: Recipe): RecipeDTO
+
+    fun toEntity(recipeDTO: RecipeDTO): Recipe
+}
+
+@Mapper(componentModel = "spring")
+interface IngredientMapper {
+
+    companion object {
+        val INSTANCE: IngredientMapper = Mappers.getMapper(IngredientMapper::class.java)
+    }
+
+    fun toDTO(ingredient: Ingredient): IngredientDTO
+
+    fun toEntity(ingredientDTO: IngredientDTO): Ingredient
 }

@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.9.10"
-    kotlin("plugin.spring") version "1.9.10"
+    kotlin("jvm") version "1.9.22"
+    kotlin("plugin.spring") version "1.9.22"
     id("org.springframework.boot") version "3.3.4"
     id("io.spring.dependency-management") version "1.1.6"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
@@ -49,7 +49,7 @@ dependencies {
 
     // Kotlin related dependencies
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.0-Beta1")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // Development dependencies
     developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -91,4 +91,14 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         jvmTarget = "17"
         incremental = false // Desactiva la compilación incremental
     }
+}
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.addAll(listOf(
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
+    ))
 }

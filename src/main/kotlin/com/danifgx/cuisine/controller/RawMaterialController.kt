@@ -1,5 +1,7 @@
 package com.danifgx.cuisine.controller
 
+import com.danifgx.cuisine.controller.hateoas.HateoasLinkHelper.addLinksToRawMaterialCollection
+import com.danifgx.cuisine.controller.hateoas.HateoasLinkHelper.addSelfLinkToRawMaterialDTO
 import com.danifgx.cuisine.log.logger
 import com.danifgx.cuisine.model.RawMaterial
 import com.danifgx.cuisine.model.RawMaterialDTO
@@ -12,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import jakarta.validation.constraints.NotNull
 import org.springframework.hateoas.CollectionModel
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -26,6 +27,7 @@ class RawMaterialController(
 ) {
 
     private val logger = logger()
+
 
     @Operation(summary = "Get all raw materials with their description in the specified language")
     @ApiResponses(
@@ -44,20 +46,7 @@ class RawMaterialController(
         val materials = rawMaterialService.getAllRawMaterialsWithDescription(language)
         val materialDTOs = materials.map { rawMaterialMapper.toDTO(it) }
 
-        // Add HATEOAS links to each DTO
-        materialDTOs.forEach { dto ->
-            val selfLink = WebMvcLinkBuilder.linkTo(
-                WebMvcLinkBuilder.methodOn(RawMaterialController::class.java).getMaterialById(dto.id)
-            ).withSelfRel()
-            dto.add(selfLink)
-        }
-
-        // Wrap in CollectionModel to add a link to the whole collection
-        val collectionLink = WebMvcLinkBuilder.linkTo(
-            WebMvcLinkBuilder.methodOn(RawMaterialController::class.java).listWithDescription(language)
-        ).withSelfRel()
-        val collectionModel = CollectionModel.of(materialDTOs, collectionLink)
-
+        val collectionModel = addLinksToRawMaterialCollection(materialDTOs, language)
         return ResponseEntity.ok(collectionModel)
     }
 
@@ -73,20 +62,7 @@ class RawMaterialController(
         val materials = rawMaterialService.getAllRawMaterials()
         val materialDTOs = materials.map { rawMaterialMapper.toDTO(it) }
 
-        // Add HATEOAS links to each DTO
-        materialDTOs.forEach { dto ->
-            val selfLink = WebMvcLinkBuilder.linkTo(
-                WebMvcLinkBuilder.methodOn(RawMaterialController::class.java).getMaterialById(dto.id)
-            ).withSelfRel()
-            dto.add(selfLink)
-        }
-
-        // Wrap in CollectionModel to add a link to the whole collection
-        val collectionLink = WebMvcLinkBuilder.linkTo(
-            WebMvcLinkBuilder.methodOn(RawMaterialController::class.java).listAllMaterials()
-        ).withSelfRel()
-        val collectionModel = CollectionModel.of(materialDTOs, collectionLink)
-
+        val collectionModel = addLinksToRawMaterialCollection(materialDTOs)
         return ResponseEntity.ok(collectionModel)
     }
 
@@ -105,13 +81,7 @@ class RawMaterialController(
         val material = rawMaterialService.getRawMaterialById(id) ?: return ResponseEntity.notFound().build()
         val materialDTO = rawMaterialMapper.toDTO(material)
 
-        // Add HATEOAS link to the DTO
-        val selfLink = WebMvcLinkBuilder.linkTo(
-            WebMvcLinkBuilder.methodOn(RawMaterialController::class.java).getMaterialById(id)
-        ).withSelfRel()
-        materialDTO.add(selfLink)
-
-        return ResponseEntity.ok(materialDTO)
+        return ResponseEntity.ok(addSelfLinkToRawMaterialDTO(materialDTO))
     }
 
     @Operation(summary = "Create a new raw material")
@@ -129,13 +99,7 @@ class RawMaterialController(
         val createdMaterial = rawMaterialService.createRawMaterial(rawMaterial)
         val materialDTO = rawMaterialMapper.toDTO(createdMaterial)
 
-        // Add HATEOAS link to the DTO
-        val selfLink = WebMvcLinkBuilder.linkTo(
-            WebMvcLinkBuilder.methodOn(RawMaterialController::class.java).getMaterialById(materialDTO.id)
-        ).withSelfRel()
-        materialDTO.add(selfLink)
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(materialDTO)
+        return ResponseEntity.status(HttpStatus.CREATED).body(addSelfLinkToRawMaterialDTO(materialDTO))
     }
 
     @Operation(summary = "Update an existing raw material by its ID")
@@ -155,13 +119,7 @@ class RawMaterialController(
         val updated = rawMaterialService.updateRawMaterial(id, updatedMaterial)
         val updatedDTO = rawMaterialMapper.toDTO(updated)
 
-        // Add HATEOAS link to the DTO
-        val selfLink = WebMvcLinkBuilder.linkTo(
-            WebMvcLinkBuilder.methodOn(RawMaterialController::class.java).getMaterialById(updatedDTO.id)
-        ).withSelfRel()
-        updatedDTO.add(selfLink)
-
-        return ResponseEntity.ok(updatedDTO)
+        return ResponseEntity.ok(addSelfLinkToRawMaterialDTO(updatedDTO))
     }
 
     @Operation(summary = "Delete a raw material by its ID")

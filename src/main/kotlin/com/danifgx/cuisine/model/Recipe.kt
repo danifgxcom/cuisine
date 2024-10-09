@@ -1,7 +1,8 @@
 package com.danifgx.cuisine.model
 
+import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.hateoas.RepresentationModel
-import java.util.UUID
+import java.util.*
 
 data class RecipeDTO(
     val id: UUID,
@@ -20,6 +21,7 @@ data class IngredientDTO(
     val rawMaterial: Map<String, Any>? = null
 )
 
+@Document(collection = "recipes")
 data class Recipe(
     val id: UUID,
     val name: String,
